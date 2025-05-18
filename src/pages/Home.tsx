@@ -30,7 +30,7 @@ const Home = () => {
             </div>
             <div className="md:w-1/2">
               <img
-                src="https://images.unsplash.com/photo-1618160702438-9b02ab6515c9"
+                src="https://images.unsplash.com/photo-1445205170230-053b83016050"
                 alt="شي إن الذهبي"
                 className="rounded-lg shadow-lg w-full h-auto"
               />
@@ -164,7 +164,7 @@ const Home = () => {
             </div>
             <div className="md:w-1/2">
               <img
-                src="https://images.unsplash.com/photo-1721322800607-8c38375eef04"
+                src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d"
                 alt="مجموعة جديدة"
                 className="rounded-lg w-full h-auto"
               />
@@ -204,60 +204,60 @@ const Home = () => {
 
 // بيانات وهمية للعرض
 const categories = [
-  { name: "ملابس نسائية", image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9", link: "/products/women" },
-  { name: "ملابس رجالية", image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901", link: "/products/men" },
-  { name: "أحذية", image: "https://images.unsplash.com/photo-1500673922987-e212871fec22", link: "/products/shoes" },
-  { name: "شنط", image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901", link: "/products/bags" },
-  { name: "إكسسوارات", image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9", link: "/products/accessories" },
+  { name: "ملابس نسائية", image: "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3", link: "/products/women" },
+  { name: "ملابس رجالية", image: "https://images.unsplash.com/photo-1617137968427-85924c800a22", link: "/products/men" },
+  { name: "أحذية", image: "https://images.unsplash.com/photo-1560343090-f0409e92791a", link: "/products/shoes" },
+  { name: "شنط", image: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7", link: "/products/bags" },
+  { name: "إكسسوارات", image: "https://images.unsplash.com/photo-1620456456327-664a18aa5360", link: "/products/accessories" },
 ];
 
 const featuredProducts = [
   { 
     name: "فستان كلاسيكي", 
-    image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9", 
+    image: "https://images.unsplash.com/photo-1539008835657-9e8e9680c956", 
     price: 8500, 
     oldPrice: 9800, 
     discount: 15 
   },
   { 
     name: "قميص رجالي", 
-    image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901", 
+    image: "https://images.unsplash.com/photo-1626497764746-6dc36546b388", 
     price: 5500
   },
   { 
     name: "حذاء رياضي", 
-    image: "https://images.unsplash.com/photo-1500673922987-e212871fec22", 
+    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff", 
     price: 7200, 
     oldPrice: 8500, 
     discount: 20 
   },
   { 
     name: "حقيبة يد نسائية", 
-    image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04", 
+    image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa", 
     price: 6300
   },
   { 
     name: "بنطلون جينز", 
-    image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901", 
+    image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246", 
     price: 7000, 
     discount: 10, 
     oldPrice: 7800 
   },
   { 
     name: "طقم إكسسوارات", 
-    image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9", 
+    image: "https://images.unsplash.com/photo-1575223970966-76ae61ee7838", 
     price: 4500
   },
   { 
     name: "كنزة شتوية", 
-    image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04", 
+    image: "https://images.unsplash.com/photo-1578587018452-892bacefd3f2", 
     price: 6800, 
     oldPrice: 7500, 
     discount: 10 
   },
   { 
     name: "ساعة يد", 
-    image: "https://images.unsplash.com/photo-1500673922987-e212871fec22", 
+    image: "https://images.unsplash.com/photo-1524805444758-089113d48a6d", 
     price: 12000
   },
 ];

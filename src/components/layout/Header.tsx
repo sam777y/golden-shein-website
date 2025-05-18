@@ -17,7 +17,11 @@ const Header = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <h1 className="text-2xl font-bold text-amber-600">شي إن الذهبي</h1>
+            <img 
+              src="/lovable-uploads/4ebd089e-f418-48f1-9c0d-3ef659ba0c8c.png" 
+              alt="شي إن الذهبي" 
+              className="h-12 md:h-16" 
+            />
           </Link>
 
           {/* Desktop Navigation */}
