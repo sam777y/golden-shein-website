@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Search, Edit, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -90,6 +91,11 @@ const ProductsList = () => {
     setIsEditDialogOpen(false);
     loadData();
   };
+  
+  // Handle search input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
 
   return (
     <div>
@@ -99,7 +105,7 @@ const ProductsList = () => {
           <Input
             placeholder="بحث..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={handleSearchChange}
             className="pl-10"
           />
         </div>
