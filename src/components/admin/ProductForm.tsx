@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,7 +33,23 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
     // Load categories from localStorage or use defaults
     const storedCategories = localStorage.getItem("categories");
     if (storedCategories) {
-      setCategories(JSON.parse(storedCategories));
+      try {
+        const parsedCategories = JSON.parse(storedCategories);
+        // Validate categories - ensure all categories have a valid id
+        const validCategories = parsedCategories.filter(
+          (cat: Category) => cat.id && cat.id.trim() !== ""
+        );
+        setCategories(validCategories);
+        
+        // If we have filtered out invalid categories, update localStorage
+        if (validCategories.length !== parsedCategories.length) {
+          localStorage.setItem("categories", JSON.stringify(validCategories));
+        }
+      } catch (error) {
+        console.error("Error parsing categories from localStorage", error);
+        setCategories(DEFAULT_CATEGORIES);
+        localStorage.setItem("categories", JSON.stringify(DEFAULT_CATEGORIES));
+      }
     } else {
       setCategories(DEFAULT_CATEGORIES);
       localStorage.setItem("categories", JSON.stringify(DEFAULT_CATEGORIES));
@@ -176,11 +191,17 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
               <SelectValue placeholder="اختر القسم" />
             </SelectTrigger>
             <SelectContent>
-              {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </SelectItem>
-              ))}
+              {categories.length > 0 ? (
+                categories.map((cat) => (
+                  cat.id && cat.id.trim() !== "" ? (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ) : null
+                ))
+              ) : (
+                <SelectItem value="no-categories">لا توجد أقسام</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>

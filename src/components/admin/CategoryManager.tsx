@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -17,7 +16,24 @@ const CategoryManager = () => {
   useEffect(() => {
     const storedCategories = localStorage.getItem("categories");
     if (storedCategories) {
-      setCategories(JSON.parse(storedCategories));
+      try {
+        const parsedCategories = JSON.parse(storedCategories);
+        // Filter out any categories with empty IDs
+        const validCategories = parsedCategories.filter(
+          (cat: Category) => cat.id && cat.id.trim() !== ""
+        );
+        
+        setCategories(validCategories);
+        
+        // If we filtered out invalid categories, update localStorage
+        if (validCategories.length !== parsedCategories.length) {
+          localStorage.setItem("categories", JSON.stringify(validCategories));
+        }
+      } catch (error) {
+        console.error("Error parsing categories", error);
+        setCategories(DEFAULT_CATEGORIES);
+        localStorage.setItem("categories", JSON.stringify(DEFAULT_CATEGORIES));
+      }
     } else {
       setCategories(DEFAULT_CATEGORIES);
       localStorage.setItem("categories", JSON.stringify(DEFAULT_CATEGORIES));
@@ -26,8 +42,10 @@ const CategoryManager = () => {
 
   // Save categories to localStorage
   const saveCategories = (updatedCategories: Category[]) => {
-    localStorage.setItem("categories", JSON.stringify(updatedCategories));
-    setCategories(updatedCategories);
+    // Filter out any categories with empty IDs before saving
+    const validCategories = updatedCategories.filter(cat => cat.id && cat.id.trim() !== "");
+    localStorage.setItem("categories", JSON.stringify(validCategories));
+    setCategories(validCategories);
   };
 
   // Add new category
@@ -39,6 +57,16 @@ const CategoryManager = () => {
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^\w\-]+/g, "");
+    
+    // Don't add if ID would be empty
+    if (!id) {
+      toast({
+        title: "خطأ",
+        description: "لا يمكن إنشاء قسم بدون معرف صالح",
+        variant: "destructive",
+      });
+      return;
+    }
     
     const newCategory = { id, name: newCategoryName.trim() };
     const updatedCategories = [...categories, newCategory];

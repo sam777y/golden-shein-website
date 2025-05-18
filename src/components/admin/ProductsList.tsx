@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Search, Edit, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -25,11 +24,26 @@ const ProductsList = () => {
     const storedCategories = localStorage.getItem("categories");
     
     if (storedProducts) {
-      setProducts(JSON.parse(storedProducts));
+      try {
+        setProducts(JSON.parse(storedProducts));
+      } catch (error) {
+        console.error("Error parsing products from localStorage", error);
+        setProducts([]);
+      }
     }
     
     if (storedCategories) {
-      setCategories(JSON.parse(storedCategories));
+      try {
+        const parsedCategories = JSON.parse(storedCategories);
+        // Validate categories - ensure all have valid ids
+        const validCategories = parsedCategories.filter(
+          (cat: Category) => cat.id && cat.id.trim() !== ""
+        );
+        setCategories(validCategories);
+      } catch (error) {
+        console.error("Error parsing categories from localStorage", error);
+        setCategories([]);
+      }
     }
   };
 
@@ -99,9 +113,11 @@ const ProductsList = () => {
           <SelectContent>
             <SelectItem value="all">جميع الأقسام</SelectItem>
             {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
+              category.id && category.id.trim() !== "" ? (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ) : null
             ))}
           </SelectContent>
         </Select>
