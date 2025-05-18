@@ -14,7 +14,7 @@ const ProductsList = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const { toast } = useToast();
@@ -41,7 +41,7 @@ const ProductsList = () => {
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter ? product.category === categoryFilter : true;
+    const matchesCategory = categoryFilter === "all" ? true : product.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
@@ -97,7 +97,7 @@ const ProductsList = () => {
             <SelectValue placeholder="جميع الأقسام" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">جميع الأقسام</SelectItem>
+            <SelectItem value="all">جميع الأقسام</SelectItem>
             {categories.map((category) => (
               <SelectItem key={category.id} value={category.id}>
                 {category.name}
