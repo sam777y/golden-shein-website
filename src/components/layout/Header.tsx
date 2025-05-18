@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, Search, ShoppingCart, Phone } from "lucide-react";
+import { Menu, Search, ShoppingCart, Phone, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Header = () => {
@@ -80,6 +80,15 @@ const Header = () => {
               <Phone className="w-4 h-4 ml-2" />
               <span>777492635</span>
             </Link>
+            
+            {/* Admin Link - Hidden on Mobile */}
+            <Link 
+              to="/admin" 
+              className="hidden md:flex items-center px-3 py-1 text-xs text-amber-700 border border-amber-500 rounded-md hover:bg-amber-50"
+            >
+              <Settings className="w-3 h-3 ml-1" />
+              <span>إدارة</span>
+            </Link>
 
             {/* Mobile Menu Button */}
             <Button variant="ghost" size="icon" onClick={toggleMenu} className="md:hidden text-gray-700">
@@ -118,6 +127,9 @@ const Header = () => {
               </Link>
               <Link to="/contact" className="text-gray-800 hover:text-amber-600 font-medium py-2">
                 تواصل معنا
+              </Link>
+              <Link to="/admin" className="text-gray-800 hover:text-amber-600 font-medium py-2">
+                لوحة الإدارة
               </Link>
               <Link 
                 to="https://wa.me/777492635" 
