@@ -66,6 +66,15 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
       return;
     }
 
+    if (!category) {
+      toast({
+        title: "خطأ",
+        description: "يرجى اختيار قسم للمنتج",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const productData: Product = {
       id: editProduct?.id || Date.now().toString(),
       name,
