@@ -12,6 +12,9 @@ export interface Product {
 export interface Category {
   id: string;
   name: string;
+  imageData?: string; // Base64 encoded image for category
+  parentId?: string; // For subcategories
+  children?: Category[]; // For storing subcategories
 }
 
 export const DEFAULT_CATEGORIES: Category[] = [

@@ -4,23 +4,29 @@ import { useParams } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Filter, ChevronDown } from "lucide-react";
-import { Product } from "@/types/product";
-
-const categoryTitles = {
-  women: "ملابس نسائية",
-  men: "ملابس رجالية",
-  shoes: "أحذية",
-  bags: "شنط",
-  accessories: "إكسسوارات"
-};
+import { Product, Category } from "@/types/product";
 
 const Products = () => {
   const { category } = useParams<{ category: string }>();
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState("default");
   const [priceRange, setPriceRange] = useState({ min: 0, max: 20000 });
   const [searchQuery, setSearchQuery] = useState("");
+
+  // تحميل الأقسام من localStorage
+  useEffect(() => {
+    const storedCategories = localStorage.getItem("categories");
+    if (storedCategories) {
+      try {
+        const parsedCategories = JSON.parse(storedCategories);
+        setCategories(parsedCategories);
+      } catch (error) {
+        console.error("Error parsing categories from localStorage", error);
+      }
+    }
+  }, []);
 
   // تحميل المنتجات من localStorage
   useEffect(() => {
@@ -29,10 +35,16 @@ const Products = () => {
       try {
         const allProducts = JSON.parse(storedProducts);
         
-        // إذا كانت هناك فئة محددة، قم بتصفية المنتجات حسب الفئة
+        // إذا كانت هناك فئة محددة، قم بتصفية المنتجات حسب الفئة والفئات الفرعية
         if (category) {
+          // الحصول على جميع الفئات الفرعية للفئة المحددة
+          const subcategoryIds = categories
+            .filter(cat => cat.parentId === category)
+            .map(cat => cat.id);
+          
+          // تصفية المنتجات حسب الفئة الرئيسية أو الفئات الفرعية
           const filteredByCategory = allProducts.filter((product: Product) => 
-            product.category === category
+            product.category === category || subcategoryIds.includes(product.category)
           );
           setProducts(filteredByCategory);
         } else {
@@ -44,7 +56,7 @@ const Products = () => {
         setProducts([]);
       }
     }
-  }, [category]);
+  }, [category, categories]);
 
   // تصفية المنتجات حسب السعر والبحث
   const filterProducts = () => {
@@ -78,6 +90,14 @@ const Products = () => {
   // الحصول على المنتجات المصفاة والمرتبة
   const filteredAndSortedProducts = sortProducts(filterProducts());
 
+  // الحصول على اسم الفئة المحددة
+  const getCategoryName = () => {
+    if (!category) return "جميع المنتجات";
+    
+    const selectedCategory = categories.find(cat => cat.id === category);
+    return selectedCategory ? selectedCategory.name : "جميع المنتجات";
+  };
+
   const toggleFilters = () => {
     setIsFiltersOpen(!isFiltersOpen);
   };
@@ -96,7 +116,7 @@ const Products = () => {
       <div className="bg-amber-50 py-8">
         <div className="container mx-auto px-4">
           <h1 className="text-3xl font-bold mb-6">
-            {category ? categoryTitles[category as keyof typeof categoryTitles] : "جميع المنتجات"}
+            {getCategoryName()}
           </h1>
           
           <div className="flex flex-col md:flex-row gap-6">

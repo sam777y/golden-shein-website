@@ -132,6 +132,19 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
     if (onSave) onSave();
   };
 
+  // Function to format category name display for nested categories
+  const getCategoryDisplayName = (cat: Category) => {
+    if (!cat.parentId) return cat.name;
+    
+    // Find parent category
+    const parent = categories.find(c => c.id === cat.parentId);
+    if (parent) {
+      return `${parent.name} ← ${cat.name}`;
+    }
+    
+    return cat.name;
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <h3 className="text-xl font-semibold mb-4">
@@ -196,12 +209,12 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
                 categories.map((cat) => (
                   cat.id && cat.id.trim() !== "" ? (
                     <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
+                      {getCategoryDisplayName(cat)}
                     </SelectItem>
                   ) : null
                 ))
               ) : (
-                <SelectItem value="no-categories">لا توجد أقسام</SelectItem>
+                <SelectItem value="no-categories" disabled>لا توجد أقسام</SelectItem>
               )}
             </SelectContent>
           </Select>
