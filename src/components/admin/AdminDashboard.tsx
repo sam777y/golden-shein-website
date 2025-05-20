@@ -1,10 +1,11 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import ProductForm from "./ProductForm";
 import ProductsList from "./ProductsList";
 import CategoryManager from "./CategoryManager";
+import OffersManager from "./OffersManager";
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -21,9 +22,10 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
       </div>
       
       <Tabs defaultValue="products">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
+        <TabsList className="grid w-full grid-cols-4 mb-6">
           <TabsTrigger value="products">المنتجات</TabsTrigger>
           <TabsTrigger value="add-product">إضافة منتج</TabsTrigger>
+          <TabsTrigger value="offers">العروض الخاصة</TabsTrigger>
           <TabsTrigger value="categories">الأقسام</TabsTrigger>
         </TabsList>
         
@@ -33,6 +35,10 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
         
         <TabsContent value="add-product" className="p-4 border rounded-md">
           <ProductForm />
+        </TabsContent>
+        
+        <TabsContent value="offers" className="p-4 border rounded-md">
+          <OffersManager />
         </TabsContent>
         
         <TabsContent value="categories" className="p-4 border rounded-md">

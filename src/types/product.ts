@@ -7,6 +7,10 @@ export interface Product {
   imageData: string; // Base64 encoded image
   category: string;
   createdAt: number;
+  isOffer?: boolean; // لتحديد ما إذا كان المنتج عرضاً خاصاً
+  oldPrice?: number; // السعر القديم قبل الخصم
+  discount?: number; // نسبة الخصم
+  quantity?: number; // كمية المنتج المتاحة
 }
 
 export interface Category {
@@ -15,6 +19,12 @@ export interface Category {
   imageData?: string; // Base64 encoded image for category
   parentId?: string; // For subcategories
   children?: Category[]; // For storing subcategories
+}
+
+export interface CartItem {
+  productId: string;
+  quantity: number;
+  product: Product;
 }
 
 export const DEFAULT_CATEGORIES: Category[] = [
