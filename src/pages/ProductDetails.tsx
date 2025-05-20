@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/hooks/use-cart';
+import CheckoutForm from '@/components/checkout/CheckoutForm';
 
 const ProductDetails = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -16,6 +17,7 @@ const ProductDetails = () => {
   const { toast } = useToast();
   const { addToCart } = useCart();
   const navigate = useNavigate();
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   useEffect(() => {
     // تحميل المنتج من localStorage
@@ -47,6 +49,7 @@ const ProductDetails = () => {
         title: 'تمت الإضافة إلى السلة',
         description: `تمت إضافة ${quantity} من ${product.name} إلى سلة التسوق`,
       });
+      navigate('/cart');
     }
   };
 
@@ -142,7 +145,7 @@ const ProductDetails = () => {
                   onClick={handleAddToCart}
                 >
                   <ShoppingCart className="ml-2 h-5 w-5" />
-                  إضافة للسلة
+                  إضافة للسلة والذهاب إليها
                 </Button>
                 <Button 
                   variant="outline" 
@@ -151,10 +154,22 @@ const ProductDetails = () => {
                   <Copy className="ml-2 h-5 w-5" />
                   نسخ الرابط
                 </Button>
+                <Button 
+                  className="bg-green-600 hover:bg-green-700 w-full mt-2"
+                  onClick={() => setIsCheckoutOpen(true)}
+                >
+                  شراء الآن
+                </Button>
               </div>
             </div>
           </div>
         </div>
+        
+        {/* نموذج إتمام الطلب */}
+        <CheckoutForm 
+          isOpen={isCheckoutOpen} 
+          onClose={() => setIsCheckoutOpen(false)} 
+        />
       </div>
     </Layout>
   );

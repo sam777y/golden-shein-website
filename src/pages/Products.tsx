@@ -1,288 +1,173 @@
 
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import Layout from "@/components/layout/Layout";
-import { Button } from "@/components/ui/button";
-import { ShoppingCart, Filter, ChevronDown } from "lucide-react";
-import { Product, Category } from "@/types/product";
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import Layout from '@/components/layout/Layout';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Product, Category, DEFAULT_CATEGORIES } from '@/types/product';
+import { useCart } from '@/hooks/use-cart';
+import { Search } from 'lucide-react';
+import ProductDialog from '@/components/product/ProductDialog';
 
 const Products = () => {
   const { category } = useParams<{ category: string }>();
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [sortBy, setSortBy] = useState("default");
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 20000 });
-  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(category);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { addToCart } = useCart();
+  
+  // State for product dialog
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // تحميل الأقسام من localStorage
+  // Load products from localStorage
   useEffect(() => {
-    const storedCategories = localStorage.getItem("categories");
-    if (storedCategories) {
-      try {
-        const parsedCategories = JSON.parse(storedCategories);
-        setCategories(parsedCategories);
-      } catch (error) {
-        console.error("Error parsing categories from localStorage", error);
-      }
-    }
-  }, []);
-
-  // تحميل المنتجات من localStorage
-  useEffect(() => {
-    const storedProducts = localStorage.getItem("products");
+    const storedProducts = localStorage.getItem('products');
     if (storedProducts) {
-      try {
-        const allProducts = JSON.parse(storedProducts);
-        
-        // إذا كانت هناك فئة محددة، قم بتصفية المنتجات حسب الفئة والفئات الفرعية
-        if (category) {
-          // الحصول على جميع الفئات الفرعية للفئة المحددة
-          const subcategoryIds = categories
-            .filter(cat => cat.parentId === category)
-            .map(cat => cat.id);
-          
-          // تصفية المنتجات حسب الفئة الرئيسية أو الفئات الفرعية
-          const filteredByCategory = allProducts.filter((product: Product) => 
-            product.category === category || subcategoryIds.includes(product.category)
-          );
-          setProducts(filteredByCategory);
-        } else {
-          // إذا لم تكن هناك فئة محددة، اعرض جميع المنتجات
-          setProducts(allProducts);
-        }
-      } catch (error) {
-        console.error("Error parsing products from localStorage", error);
-        setProducts([]);
-      }
+      const parsedProducts = JSON.parse(storedProducts);
+      setProducts(parsedProducts);
+      filterProducts(parsedProducts, selectedCategory, searchQuery);
     }
-  }, [category, categories]);
 
-  // تصفية المنتجات حسب السعر والبحث
-  const filterProducts = () => {
-    if (!products.length) return [];
-    
-    return products.filter(product => {
-      const matchesPrice = product.price >= priceRange.min && product.price <= priceRange.max;
-      const matchesSearch = searchQuery 
-        ? product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-          product.description.toLowerCase().includes(searchQuery.toLowerCase())
-        : true;
-      
-      return matchesPrice && matchesSearch;
-    });
-  };
-
-  // ترتيب المنتجات
-  const sortProducts = (productsToSort: Product[]) => {
-    switch (sortBy) {
-      case "price-asc":
-        return [...productsToSort].sort((a, b) => a.price - b.price);
-      case "price-desc":
-        return [...productsToSort].sort((a, b) => b.price - a.price);
-      case "name-asc":
-        return [...productsToSort].sort((a, b) => a.name.localeCompare(b.name));
-      default:
-        return productsToSort;
+    // Load categories from localStorage
+    const storedCategories = localStorage.getItem('categories');
+    if (storedCategories) {
+      const parsedCategories = JSON.parse(storedCategories);
+      setCategories(parsedCategories);
     }
+  }, [selectedCategory]);
+
+  // Filter products by category and search query
+  const filterProducts = (allProducts: Product[], categoryId?: string, query: string = '') => {
+    let filtered = [...allProducts];
+
+    // Filter by category
+    if (categoryId) {
+      filtered = filtered.filter(product => product.category === categoryId);
+    }
+
+    // Filter by search query
+    if (query.trim() !== '') {
+      const lowerQuery = query.toLowerCase();
+      filtered = filtered.filter(
+        product => 
+          product.name.toLowerCase().includes(lowerQuery) || 
+          product.description.toLowerCase().includes(lowerQuery)
+      );
+    }
+
+    setFilteredProducts(filtered);
   };
 
-  // الحصول على المنتجات المصفاة والمرتبة
-  const filteredAndSortedProducts = sortProducts(filterProducts());
-
-  // الحصول على اسم الفئة المحددة
-  const getCategoryName = () => {
-    if (!category) return "جميع المنتجات";
-    
-    const selectedCategory = categories.find(cat => cat.id === category);
-    return selectedCategory ? selectedCategory.name : "جميع المنتجات";
-  };
-
-  const toggleFilters = () => {
-    setIsFiltersOpen(!isFiltersOpen);
-  };
-
-  const handlePriceRangeChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'min' | 'max') => {
-    const value = parseInt(e.target.value);
-    setPriceRange(prev => ({ ...prev, [type]: value }));
-  };
-
+  // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+    const query = e.target.value;
+    setSearchQuery(query);
+    filterProducts(products, selectedCategory, query);
+  };
+
+  // Handle category selection
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategory(categoryId === selectedCategory ? undefined : categoryId);
+  };
+
+  // Open product dialog
+  const openProductDialog = (product: Product) => {
+    setSelectedProduct(product);
+    setIsDialogOpen(true);
+  };
+
+  // Close product dialog
+  const closeProductDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedProduct(null);
   };
 
   return (
     <Layout>
-      <div className="bg-amber-50 py-8">
-        <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold mb-6">
-            {getCategoryName()}
-          </h1>
-          
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Filters - Desktop */}
-            <div className="hidden md:block w-64 bg-white p-4 rounded-lg shadow-sm h-fit sticky top-24">
-              <h2 className="text-lg font-semibold mb-4">التصفية</h2>
-              
-              {/* Search Input */}
-              <div className="mb-4">
-                <h3 className="font-medium mb-2">بحث</h3>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  placeholder="ابحث عن منتج..."
-                  className="w-full p-2 border border-gray-200 rounded"
-                />
-              </div>
-              
-              <div className="mb-6">
-                <h3 className="font-medium mb-2">السعر</h3>
-                <div className="flex flex-col space-y-2">
-                  <label className="flex items-center justify-between">
-                    <span className="text-gray-600">الحد الأدنى:</span>
-                    <input
-                      type="number"
-                      value={priceRange.min}
-                      onChange={(e) => handlePriceRangeChange(e, 'min')}
-                      className="w-24 p-2 border border-gray-200 rounded text-left"
-                      min="0"
-                      max={priceRange.max}
-                    />
-                  </label>
-                  <label className="flex items-center justify-between">
-                    <span className="text-gray-600">الحد الأقصى:</span>
-                    <input
-                      type="number"
-                      value={priceRange.max}
-                      onChange={(e) => handlePriceRangeChange(e, 'max')}
-                      className="w-24 p-2 border border-gray-200 rounded text-left"
-                      min={priceRange.min}
-                    />
-                  </label>
-                </div>
-              </div>
-              
-              <div className="mb-6">
-                <h3 className="font-medium mb-2">الترتيب</h3>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full p-2 border border-gray-200 rounded"
-                >
-                  <option value="default">الافتراضي</option>
-                  <option value="price-asc">السعر: من الأقل للأعلى</option>
-                  <option value="price-desc">السعر: من الأعلى للأقل</option>
-                  <option value="name-asc">الاسم: أ-ي</option>
-                </select>
-              </div>
-            </div>
-            
-            {/* Mobile Filters Button */}
-            <div className="md:hidden mb-4">
-              <Button
-                onClick={toggleFilters}
-                variant="outline"
-                className="w-full flex justify-between items-center"
-              >
-                <span>التصفية والترتيب</span>
-                <Filter className="h-5 w-5" />
-              </Button>
-              
-              {isFiltersOpen && (
-                <div className="mt-2 p-4 bg-white rounded-lg shadow-md">
-                  {/* Search Input - Mobile */}
-                  <div className="mb-4">
-                    <h3 className="font-medium mb-2">بحث</h3>
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={handleSearchChange}
-                      placeholder="ابحث عن منتج..."
-                      className="w-full p-2 border border-gray-200 rounded"
-                    />
-                  </div>
-                  
-                  <div className="mb-6">
-                    <h3 className="font-medium mb-2">السعر</h3>
-                    <div className="flex flex-col space-y-2">
-                      <label className="flex items-center justify-between">
-                        <span className="text-gray-600">الحد الأدنى:</span>
-                        <input
-                          type="number"
-                          value={priceRange.min}
-                          onChange={(e) => handlePriceRangeChange(e, 'min')}
-                          className="w-24 p-2 border border-gray-200 rounded text-left"
-                          min="0"
-                          max={priceRange.max}
-                        />
-                      </label>
-                      <label className="flex items-center justify-between">
-                        <span className="text-gray-600">الحد الأقصى:</span>
-                        <input
-                          type="number"
-                          value={priceRange.max}
-                          onChange={(e) => handlePriceRangeChange(e, 'max')}
-                          className="w-24 p-2 border border-gray-200 rounded text-left"
-                          min={priceRange.min}
-                        />
-                      </label>
-                    </div>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <h3 className="font-medium mb-2">الترتيب</h3>
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="w-full p-2 border border-gray-200 rounded"
-                    >
-                      <option value="default">الافتراضي</option>
-                      <option value="price-asc">السعر: من الأقل للأعلى</option>
-                      <option value="price-desc">السعر: من الأعلى للأقل</option>
-                      <option value="name-asc">الاسم: أ-ي</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {/* Products Grid */}
-            <div className="flex-1">
-              {filteredAndSortedProducts.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredAndSortedProducts.map(product => (
-                    <div key={product.id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                      <div className="relative overflow-hidden">
-                        <img 
-                          src={product.imageData} 
-                          alt={product.name} 
-                          className="w-full h-64 object-cover transition-transform hover:scale-105 duration-500"
-                        />
-                      </div>
-                      <div className="p-4">
-                        <h3 className="font-medium text-gray-800 mb-1">{product.name}</h3>
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center">
-                            <span className="text-amber-600 font-bold">{product.price} ريال</span>
-                          </div>
-                          <Button variant="ghost" size="icon" className="text-amber-600">
-                            <ShoppingCart className="h-5 w-5" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-white p-8 rounded-lg text-center">
-                  <p className="text-lg text-gray-600">لا توجد منتجات متاحة{searchQuery ? " تطابق البحث" : ""}</p>
-                </div>
-              )}
-            </div>
-          </div>
+      <div className="container mx-auto py-8 px-4">
+        <h1 className="text-3xl font-bold mb-8">المنتجات</h1>
+        
+        {/* Search bar */}
+        <div className="relative mb-8 max-w-md mx-auto">
+          <Input
+            type="text"
+            placeholder="البحث عن منتج..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="pl-10"
+          />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
         </div>
+        
+        {/* Categories filter */}
+        <div className="flex flex-wrap justify-center gap-2 mb-8">
+          {categories.map((cat) => (
+            <Button
+              key={cat.id}
+              variant={selectedCategory === cat.id ? "default" : "outline"}
+              className={selectedCategory === cat.id ? "bg-amber-600 hover:bg-amber-700" : ""}
+              onClick={() => handleCategoryChange(cat.id)}
+            >
+              {cat.name}
+            </Button>
+          ))}
+        </div>
+        
+        {/* Products grid */}
+        {filteredProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filteredProducts.map((product) => (
+              <div 
+                key={product.id} 
+                className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => openProductDialog(product)}
+              >
+                <div className="h-48 overflow-hidden">
+                  <img 
+                    src={product.imageData} 
+                    alt={product.name}
+                    className="w-full h-full object-cover transition-transform hover:scale-105" 
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="font-semibold mb-2 text-lg">{product.name}</h3>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      {product.oldPrice ? (
+                        <div className="flex flex-col">
+                          <span className="text-amber-600 font-bold">{product.price} ريال</span>
+                          <span className="text-gray-500 text-sm line-through">{product.oldPrice} ريال</span>
+                        </div>
+                      ) : (
+                        <span className="text-amber-600 font-bold">{product.price} ريال</span>
+                      )}
+                    </div>
+                    {product.discount && (
+                      <span className="bg-red-500 text-white text-xs px-2 py-1 rounded">
+                        خصم {product.discount}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">لم يتم العثور على منتجات</p>
+          </div>
+        )}
       </div>
+      
+      {/* Product Dialog */}
+      <ProductDialog
+        product={selectedProduct}
+        isOpen={isDialogOpen}
+        onClose={closeProductDialog}
+      />
     </Layout>
   );
 };

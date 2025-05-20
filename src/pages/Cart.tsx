@@ -8,6 +8,7 @@ import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { Copy, Trash, Minus, Plus, Share, ShoppingCart } from 'lucide-react';
 import { Product } from '@/types/product';
+import CheckoutForm from '@/components/checkout/CheckoutForm';
 
 const Cart = () => {
   const { cart, removeFromCart, updateQuantity, clearCart, getCartTotal, getCartShareLink } = useCart();
@@ -15,6 +16,7 @@ const Cart = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isShared, setIsShared] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   // تحميل السلة المشتركة إذا تم توفير معلمة المشاركة
   useEffect(() => {
@@ -181,7 +183,10 @@ const Cart = () => {
                   </div>
                 </div>
                 
-                <Button className="bg-amber-600 hover:bg-amber-700 w-full mb-4">
+                <Button 
+                  className="bg-amber-600 hover:bg-amber-700 w-full mb-4"
+                  onClick={() => setIsCheckoutOpen(true)}
+                >
                   إتمام الشراء
                 </Button>
                 
@@ -218,6 +223,12 @@ const Cart = () => {
             </Link>
           </div>
         )}
+        
+        {/* نموذج إتمام الطلب */}
+        <CheckoutForm 
+          isOpen={isCheckoutOpen} 
+          onClose={() => setIsCheckoutOpen(false)} 
+        />
       </div>
     </Layout>
   );
