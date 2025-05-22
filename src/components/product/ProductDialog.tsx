@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Copy, ShoppingCart } from 'lucide-react';
+import { Copy, ShoppingCart, ExternalLink, Share2 } from 'lucide-react';
 import { 
   Dialog, 
   DialogContent, 
@@ -38,7 +38,7 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
     navigate('/cart');
   };
 
-  const copyProductLink = () => {
+  const copyProductLink = useCallback(() => {
     const url = `${window.location.origin}/product/${product.id}`;
     navigator.clipboard.writeText(url).then(() => {
       toast({
@@ -46,6 +46,27 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
         description: 'تم نسخ رابط المنتج بنجاح',
       });
     });
+  }, [product.id, toast]);
+
+  const shareProduct = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: product.name,
+        text: `تفقد هذا المنتج الرائع: ${product.name}`,
+        url: `${window.location.origin}/product/${product.id}`,
+      })
+      .then(() => {
+        toast({
+          title: 'تمت المشاركة',
+          description: 'تم مشاركة المنتج بنجاح',
+        });
+      })
+      .catch((error) => {
+        console.error('Error sharing:', error);
+      });
+    } else {
+      copyProductLink();
+    }
   };
 
   return (
@@ -65,6 +86,7 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
               src={product.imageData} 
               alt={product.name} 
               className="w-full h-auto object-cover rounded-lg"
+              loading="lazy"
             />
           </div>
           
@@ -118,21 +140,46 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
             </div>
             
             {/* أزرار الإجراءات */}
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-col gap-3">
               <Button 
-                className="bg-amber-600 hover:bg-amber-700 flex-1"
+                className="bg-amber-600 hover:bg-amber-700 w-full"
                 onClick={handleAddToCart}
               >
                 <ShoppingCart className="ml-2 h-5 w-5" />
                 إضافة للسلة والذهاب إليها
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={copyProductLink}
+              <div className="flex gap-3 w-full">
+                <Button 
+                  variant="outline" 
+                  onClick={copyProductLink}
+                  className="flex-1"
+                >
+                  <Copy className="ml-2 h-5 w-5" />
+                  نسخ الرابط
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={shareProduct}
+                  className="flex-1"
+                >
+                  <Share2 className="ml-2 h-5 w-5" />
+                  مشاركة
+                </Button>
+              </div>
+              <a 
+                href={`https://wa.me/777492635?text=${encodeURIComponent(`أود الاستفسار عن المنتج: ${product.name}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full"
               >
-                <Copy className="ml-2 h-5 w-5" />
-                نسخ الرابط
-              </Button>
+                <Button 
+                  variant="outline" 
+                  className="bg-green-600 text-white hover:bg-green-700 w-full"
+                >
+                  <ExternalLink className="ml-2 h-5 w-5" />
+                  استفسر عبر الواتساب
+                </Button>
+              </a>
             </div>
           </div>
         </div>
