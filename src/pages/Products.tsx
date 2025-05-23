@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Product, Category, DEFAULT_CATEGORIES } from '@/types/product';
 import { useCart } from '@/hooks/use-cart';
-import { Search } from 'lucide-react';
+import { Search, ShoppingCart } from 'lucide-react';
 import ProductDialog from '@/components/product/ProductDialog';
+import { useToast } from '@/hooks/use-toast';
 
 const Products = () => {
   const { category } = useParams<{ category: string }>();
@@ -17,6 +18,7 @@ const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(category);
   const [searchQuery, setSearchQuery] = useState('');
   const { addToCart } = useCart();
+  const { toast } = useToast();
   
   // State for product dialog
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -85,6 +87,16 @@ const Products = () => {
     setSelectedProduct(null);
   };
 
+  // Add product to cart
+  const handleAddToCart = (product: Product, e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToCart(product, 1);
+    toast({
+      title: 'تمت الإضافة إلى السلة',
+      description: `تمت إضافة ${product.name} إلى سلة التسوق`,
+    });
+  };
+
   return (
     <Layout>
       <div className="container mx-auto py-8 px-4">
@@ -122,7 +134,7 @@ const Products = () => {
             {filteredProducts.map((product) => (
               <div 
                 key={product.id} 
-                className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer relative"
                 onClick={() => openProductDialog(product)}
               >
                 <div className="h-48 overflow-hidden">
@@ -145,11 +157,21 @@ const Products = () => {
                         <span className="text-amber-600 font-bold">{product.price} ريال</span>
                       )}
                     </div>
-                    {product.discount && (
-                      <span className="bg-red-500 text-white text-xs px-2 py-1 rounded">
-                        خصم {product.discount}%
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {product.discount && (
+                        <span className="bg-red-500 text-white text-xs px-2 py-1 rounded">
+                          خصم {product.discount}%
+                        </span>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                        onClick={(e) => handleAddToCart(product, e)}
+                      >
+                        <ShoppingCart className="h-5 w-5" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

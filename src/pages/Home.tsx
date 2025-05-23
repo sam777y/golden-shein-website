@@ -3,8 +3,36 @@ import React from "react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ChevronLeft } from "lucide-react";
+import { useCart } from "@/hooks/use-cart";
+import { useToast } from "@/hooks/use-toast";
 
 const Home = () => {
+  const { addToCart } = useCart();
+  const { toast } = useToast();
+
+  // Add product to cart (for demo products)
+  const handleAddToCart = (product: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Create a mock product object for demo
+    const mockProduct = {
+      id: `demo-${Date.now()}`,
+      name: product.name,
+      price: product.price,
+      imageData: product.image,
+      description: `منتج رائع - ${product.name}`,
+      category: 'demo',
+      oldPrice: product.oldPrice,
+      discount: product.discount,
+      isOffer: !!product.discount
+    };
+    
+    addToCart(mockProduct, 1);
+    toast({
+      title: 'تمت الإضافة إلى السلة',
+      description: `تمت إضافة ${product.name} إلى سلة التسوق`,
+    });
+  };
+
   return (
     <Layout>
       {/* Hero Section */}
@@ -94,7 +122,12 @@ const Home = () => {
                         <span className="text-gray-500 text-sm line-through mr-2">{product.oldPrice} ريال</span>
                       )}
                     </div>
-                    <Button variant="ghost" size="icon" className="text-amber-600">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                      onClick={(e) => handleAddToCart(product, e)}
+                    >
                       <ShoppingCart className="h-5 w-5" />
                     </Button>
                   </div>

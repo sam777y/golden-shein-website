@@ -4,9 +4,15 @@ import Layout from '@/components/layout/Layout';
 import { Product } from '@/types/product';
 import ProductDialog from '@/components/product/ProductDialog';
 import { Helmet } from 'react-helmet';
+import { Button } from '@/components/ui/button';
+import { ShoppingCart } from 'lucide-react';
+import { useCart } from '@/hooks/use-cart';
+import { useToast } from '@/hooks/use-toast';
 
 const Offers = () => {
   const [offerProducts, setOfferProducts] = useState<Product[]>([]);
+  const { addToCart } = useCart();
+  const { toast } = useToast();
   
   // State for product dialog
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -41,6 +47,16 @@ const Offers = () => {
   const closeProductDialog = () => {
     setIsDialogOpen(false);
     setSelectedProduct(null);
+  };
+
+  // Add product to cart
+  const handleAddToCart = (product: Product, e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToCart(product, 1);
+    toast({
+      title: 'تمت الإضافة إلى السلة',
+      description: `تمت إضافة ${product.name} إلى سلة التسوق`,
+    });
   };
 
   return (
@@ -85,15 +101,25 @@ const Offers = () => {
                         <span className="text-gray-500 text-sm line-through">{product.oldPrice} ريال</span>
                       )}
                     </div>
-                    <button 
-                      className="bg-amber-500 text-white px-3 py-1 rounded text-sm hover:bg-amber-600"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openProductDialog(product);
-                      }}
-                    >
-                      عرض المنتج
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        className="bg-amber-500 text-white px-3 py-1 rounded text-sm hover:bg-amber-600"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openProductDialog(product);
+                        }}
+                      >
+                        عرض المنتج
+                      </button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                        onClick={(e) => handleAddToCart(product, e)}
+                      >
+                        <ShoppingCart className="h-5 w-5" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
