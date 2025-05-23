@@ -23,7 +23,8 @@ const Home = () => {
       category: 'demo',
       oldPrice: product.oldPrice,
       discount: product.discount,
-      isOffer: !!product.discount
+      isOffer: !!product.discount,
+      createdAt: new Date().toISOString()
     };
     
     addToCart(mockProduct, 1);
