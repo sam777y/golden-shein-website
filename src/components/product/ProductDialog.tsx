@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Copy, ShoppingCart, ExternalLink, Share2 } from 'lucide-react';
 import { 
@@ -38,7 +38,7 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
     onClose();
   };
 
-  const copyProductLink = useCallback(() => {
+  const copyProductLink = () => {
     const url = `${window.location.origin}/product/${product.id}`;
     navigator.clipboard.writeText(url).then(() => {
       toast({
@@ -46,7 +46,7 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
         description: 'تم نسخ رابط المنتج بنجاح',
       });
     });
-  }, [product.id, toast]);
+  };
 
   const shareProduct = () => {
     if (navigator.share) {
