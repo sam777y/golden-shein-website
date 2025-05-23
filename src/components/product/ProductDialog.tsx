@@ -35,7 +35,7 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
       title: 'تمت الإضافة إلى السلة',
       description: `تمت إضافة ${quantity} من ${product.name} إلى سلة التسوق`,
     });
-    navigate('/cart');
+    onClose();
   };
 
   const copyProductLink = useCallback(() => {
@@ -146,7 +146,7 @@ const ProductDialog = ({ product, isOpen, onClose }: ProductDialogProps) => {
                 onClick={handleAddToCart}
               >
                 <ShoppingCart className="ml-2 h-5 w-5" />
-                إضافة للسلة والذهاب إليها
+                إضافة للسلة
               </Button>
               <div className="flex gap-3 w-full">
                 <Button 
