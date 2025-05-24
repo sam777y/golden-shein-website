@@ -1,4 +1,3 @@
-
 import React from "react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,7 @@ const Home = () => {
       oldPrice: product.oldPrice,
       discount: product.discount,
       isOffer: !!product.discount,
-      createdAt: new Date().toISOString()
+      createdAt: Date.now()
     };
     
     addToCart(mockProduct, 1);

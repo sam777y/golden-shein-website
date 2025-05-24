@@ -1,8 +1,9 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, Search, ShoppingCart, Phone, Settings } from "lucide-react";
+import { Menu, Search, Phone, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import CartWidget from "./CartWidget";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -69,9 +70,7 @@ const Header = () => {
             <Button variant="ghost" size="icon" className="text-gray-700 hover:text-amber-600">
               <Search className="w-5 h-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="text-gray-700 hover:text-amber-600">
-              <ShoppingCart className="w-5 h-5" />
-            </Button>
+            <CartWidget />
             <Link 
               to="https://wa.me/777492635" 
               target="_blank" 
@@ -103,6 +102,9 @@ const Header = () => {
             <nav className="flex flex-col space-y-3">
               <Link to="/" className="text-gray-800 hover:text-amber-600 font-medium py-2">
                 الرئيسية
+              </Link>
+              <Link to="/cart" className="text-gray-800 hover:text-amber-600 font-medium py-2">
+                سلة التسوق
               </Link>
               <Link to="/products/women" className="text-gray-800 hover:text-amber-600 font-medium py-2 pr-4">
                 ملابس نسائية
