@@ -1,16 +1,22 @@
-
 export interface Product {
   id: string;
   name: string;
   description: string;
   price: number;
   imageData: string; // Base64 encoded image
+  additionalImages?: string[]; // Additional images for the product
   category: string;
   createdAt: number;
   isOffer?: boolean; // لتحديد ما إذا كان المنتج عرضاً خاصاً
   oldPrice?: number; // السعر القديم قبل الخصم
   discount?: number; // نسبة الخصم
   quantity?: number; // كمية المنتج المتاحة
+  dimensions?: {
+    length?: number; // الطول
+    width?: number; // العرض
+    height?: number; // الارتفاع
+  };
+  sizes?: string[]; // المقاسات المتاحة
 }
 
 export interface Category {

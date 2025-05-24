@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Product, Category, DEFAULT_CATEGORIES } from "@/types/product";
+import { X, Plus, Images } from "lucide-react";
 
 interface ProductFormProps {
   editProduct?: Product;
@@ -16,9 +17,21 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [oldPrice, setOldPrice] = useState("");
   const [category, setCategory] = useState("");
   const [imageData, setImageData] = useState("");
+  const [additionalImages, setAdditionalImages] = useState<string[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  
+  // Dimensions state
+  const [length, setLength] = useState("");
+  const [width, setWidth] = useState("");
+  const [height, setHeight] = useState("");
+  
+  // Sizes state
+  const [sizes, setSizes] = useState<string[]>([]);
+  const [newSize, setNewSize] = useState("");
+  
   const { toast } = useToast();
   
   useEffect(() => {
@@ -27,8 +40,20 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
       setName(editProduct.name);
       setDescription(editProduct.description);
       setPrice(editProduct.price.toString());
+      setOldPrice(editProduct.oldPrice?.toString() || "");
       setCategory(editProduct.category);
       setImageData(editProduct.imageData);
+      setAdditionalImages(editProduct.additionalImages || []);
+      
+      // Set dimensions
+      if (editProduct.dimensions) {
+        setLength(editProduct.dimensions.length?.toString() || "");
+        setWidth(editProduct.dimensions.width?.toString() || "");
+        setHeight(editProduct.dimensions.height?.toString() || "");
+      }
+      
+      // Set sizes
+      setSizes(editProduct.sizes || []);
     }
 
     // Load categories from localStorage or use defaults
@@ -36,13 +61,11 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
     if (storedCategories) {
       try {
         const parsedCategories = JSON.parse(storedCategories);
-        // Validate categories - ensure all categories have a valid id
         const validCategories = parsedCategories.filter(
           (cat: Category) => cat.id && cat.id.trim() !== ""
         );
         setCategories(validCategories);
         
-        // If we have filtered out invalid categories, update localStorage
         if (validCategories.length !== parsedCategories.length) {
           localStorage.setItem("categories", JSON.stringify(validCategories));
         }
@@ -70,6 +93,40 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
     }
   };
 
+  const handleAdditionalImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newImages: string[] = [];
+      Array.from(files).forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            newImages.push(event.target.result.toString());
+            if (newImages.length === files.length) {
+              setAdditionalImages([...additionalImages, ...newImages]);
+            }
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeAdditionalImage = (index: number) => {
+    setAdditionalImages(additionalImages.filter((_, i) => i !== index));
+  };
+
+  const addSize = () => {
+    if (newSize.trim() && !sizes.includes(newSize.trim())) {
+      setSizes([...sizes, newSize.trim()]);
+      setNewSize("");
+    }
+  };
+
+  const removeSize = (index: number) => {
+    setSizes(sizes.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -91,14 +148,31 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
       return;
     }
 
+    // Calculate discount if old price is provided
+    const currentPrice = parseFloat(price);
+    const previousPrice = oldPrice ? parseFloat(oldPrice) : undefined;
+    const discount = previousPrice && previousPrice > currentPrice 
+      ? Math.round(((previousPrice - currentPrice) / previousPrice) * 100)
+      : undefined;
+
     const productData: Product = {
       id: editProduct?.id || Date.now().toString(),
       name,
       description,
-      price: parseFloat(price),
+      price: currentPrice,
+      oldPrice: previousPrice,
+      discount,
+      isOffer: !!discount,
       imageData,
+      additionalImages: additionalImages.length > 0 ? additionalImages : undefined,
       category,
       createdAt: editProduct?.createdAt || Date.now(),
+      dimensions: (length || width || height) ? {
+        length: length ? parseFloat(length) : undefined,
+        width: width ? parseFloat(width) : undefined,
+        height: height ? parseFloat(height) : undefined,
+      } : undefined,
+      sizes: sizes.length > 0 ? sizes : undefined,
     };
 
     // Get existing products or initialize
@@ -125,8 +199,15 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
       setName("");
       setDescription("");
       setPrice("");
+      setOldPrice("");
       setCategory("");
       setImageData("");
+      setAdditionalImages([]);
+      setLength("");
+      setWidth("");
+      setHeight("");
+      setSizes([]);
+      setNewSize("");
     }
 
     if (onSave) onSave();
@@ -177,19 +258,36 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
           />
         </div>
         
-        <div>
-          <label htmlFor="price" className="block text-sm font-medium mb-1">
-            سعر المنتج
-          </label>
-          <Input
-            id="price"
-            type="number"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            min="0"
-            step="0.01"
-            required
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="price" className="block text-sm font-medium mb-1">
+              السعر الحالي
+            </label>
+            <Input
+              id="price"
+              type="number"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              min="0"
+              step="0.01"
+              required
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="oldPrice" className="block text-sm font-medium mb-1">
+              السعر القديم (اختياري)
+            </label>
+            <Input
+              id="oldPrice"
+              type="number"
+              value={oldPrice}
+              onChange={(e) => setOldPrice(e.target.value)}
+              min="0"
+              step="0.01"
+              placeholder="السعر قبل الخصم"
+            />
+          </div>
         </div>
         
         <div>
@@ -222,7 +320,7 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
         
         <div>
           <label htmlFor="image" className="block text-sm font-medium mb-1">
-            صورة المنتج
+            الصورة الرئيسية
           </label>
           <Input
             id="image"
@@ -234,12 +332,144 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
           />
           {imageData && (
             <div className="mt-2">
-              <p className="text-sm mb-1">معاينة الصورة:</p>
+              <p className="text-sm mb-1">معاينة الصورة الرئيسية:</p>
               <img
                 src={imageData}
                 alt="معاينة"
                 className="w-32 h-32 object-cover border rounded-md"
               />
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="additionalImages" className="block text-sm font-medium mb-1">
+            صور إضافية (اختياري)
+          </label>
+          <Input
+            id="additionalImages"
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleAdditionalImageChange}
+            className="mb-2"
+          />
+          {additionalImages.length > 0 && (
+            <div className="mt-2">
+              <p className="text-sm mb-2">الصور الإضافية:</p>
+              <div className="flex flex-wrap gap-2">
+                {additionalImages.map((img, index) => (
+                  <div key={index} className="relative">
+                    <img
+                      src={img}
+                      alt={`صورة إضافية ${index + 1}`}
+                      className="w-20 h-20 object-cover border rounded-md"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6"
+                      onClick={() => removeAdditionalImage(index)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            الأبعاد (اختياري) - بالسنتيمتر
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="length" className="block text-xs text-gray-600 mb-1">
+                الطول
+              </label>
+              <Input
+                id="length"
+                type="number"
+                value={length}
+                onChange={(e) => setLength(e.target.value)}
+                min="0"
+                step="0.1"
+                placeholder="الطول"
+              />
+            </div>
+            <div>
+              <label htmlFor="width" className="block text-xs text-gray-600 mb-1">
+                العرض
+              </label>
+              <Input
+                id="width"
+                type="number"
+                value={width}
+                onChange={(e) => setWidth(e.target.value)}
+                min="0"
+                step="0.1"
+                placeholder="العرض"
+              />
+            </div>
+            <div>
+              <label htmlFor="height" className="block text-xs text-gray-600 mb-1">
+                الارتفاع
+              </label>
+              <Input
+                id="height"
+                type="number"
+                value={height}
+                onChange={(e) => setHeight(e.target.value)}
+                min="0"
+                step="0.1"
+                placeholder="الارتفاع"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            المقاسات المتاحة (اختياري)
+          </label>
+          <div className="flex gap-2 mb-2">
+            <Input
+              value={newSize}
+              onChange={(e) => setNewSize(e.target.value)}
+              placeholder="أدخل مقاس (مثال: S, M, L, XL)"
+              className="flex-1"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addSize}
+              disabled={!newSize.trim()}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          {sizes.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {sizes.map((size, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded"
+                >
+                  <span className="text-sm">{size}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-4 w-4 p-0"
+                    onClick={() => removeSize(index)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
             </div>
           )}
         </div>
