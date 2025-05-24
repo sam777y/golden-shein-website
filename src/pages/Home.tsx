@@ -1,13 +1,24 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ChevronLeft } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { useToast } from "@/hooks/use-toast";
+import { Category, DEFAULT_CATEGORIES } from "@/types/product";
 
 const Home = () => {
   const { addToCart } = useCart();
   const { toast } = useToast();
+  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
+
+  // Load categories from localStorage
+  useEffect(() => {
+    const storedCategories = localStorage.getItem('categories');
+    if (storedCategories) {
+      const parsedCategories = JSON.parse(storedCategories);
+      setCategories(parsedCategories);
+    }
+  }, []);
 
   // Add product to cart (for demo products)
   const handleAddToCart = (product: any, e: React.MouseEvent) => {
@@ -72,22 +83,28 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">تسوق حسب الفئة</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-            {categories.map((category, index) => (
-              <a key={index} href={category.link} className="group">
-                <div className="bg-gray-100 rounded-lg overflow-hidden transition-all duration-300 group-hover:shadow-md">
-                  <div className="aspect-square overflow-hidden">
-                    <img
-                      src={category.image}
-                      alt={category.name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
+            {categories.map((category, index) => {
+              // استخدام الصورة المحفوظة أو الصورة الافتراضية
+              const categoryImage = category.imageData || getDefaultCategoryImage(category.id);
+              const categoryLink = `/products/${category.id}`;
+              
+              return (
+                <a key={category.id} href={categoryLink} className="group">
+                  <div className="bg-gray-100 rounded-lg overflow-hidden transition-all duration-300 group-hover:shadow-md">
+                    <div className="aspect-square overflow-hidden">
+                      <img
+                        src={categoryImage}
+                        alt={category.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    </div>
+                    <div className="p-3 text-center bg-amber-50 group-hover:bg-amber-100 transition-colors">
+                      <h3 className="font-medium text-gray-800">{category.name}</h3>
+                    </div>
                   </div>
-                  <div className="p-3 text-center bg-amber-50 group-hover:bg-amber-100 transition-colors">
-                    <h3 className="font-medium text-gray-800">{category.name}</h3>
-                  </div>
-                </div>
-              </a>
-            ))}
+                </a>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -233,6 +250,18 @@ const Home = () => {
       </section>
     </Layout>
   );
+};
+
+// Helper function to get default category images
+const getDefaultCategoryImage = (categoryId: string): string => {
+  const defaultImages: { [key: string]: string } = {
+    women: "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3",
+    men: "https://images.unsplash.com/photo-1617137968427-85924c800a22",
+    shoes: "https://images.unsplash.com/photo-1560343090-f0409e92791a",
+    bags: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7",
+    accessories: "https://images.unsplash.com/photo-1620456456327-664a18aa5360",
+  };
+  return defaultImages[categoryId] || "https://images.unsplash.com/photo-1620456456327-664a18aa5360";
 };
 
 // بيانات وهمية للعرض
