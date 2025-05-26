@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const Products = () => {
   const { category } = useParams<{ category: string }>();
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
@@ -30,16 +30,38 @@ const Products = () => {
     if (storedProducts) {
       const parsedProducts = JSON.parse(storedProducts);
       setProducts(parsedProducts);
-      filterProducts(parsedProducts, selectedCategory, searchQuery);
     }
 
     // Load categories from localStorage
     const storedCategories = localStorage.getItem('categories');
     if (storedCategories) {
       const parsedCategories = JSON.parse(storedCategories);
-      setCategories(parsedCategories);
+      setCategories([...DEFAULT_CATEGORIES, ...parsedCategories]);
     }
-  }, [selectedCategory]);
+  }, []);
+
+  // Update selectedCategory when category param changes
+  useEffect(() => {
+    if (category) {
+      // التحقق من وجود الفئة في القائمة
+      const categoryExists = categories.some(cat => cat.id === category);
+      if (categoryExists) {
+        setSelectedCategory(category);
+      } else {
+        // إذا كانت الفئة غير موجودة، إعادة توجيه إلى صفحة المنتجات العامة
+        console.warn(`Category "${category}" not found, redirecting to products page`);
+        navigate('/products', { replace: true });
+        return;
+      }
+    } else {
+      setSelectedCategory(undefined);
+    }
+  }, [category, categories, navigate]);
+
+  // Filter products whenever dependencies change
+  useEffect(() => {
+    filterProducts(products, selectedCategory, searchQuery);
+  }, [products, selectedCategory, searchQuery]);
 
   // Filter products by category and search query
   const filterProducts = (allProducts: Product[], categoryId?: string, query: string = '') => {
@@ -67,12 +89,28 @@ const Products = () => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
-    filterProducts(products, selectedCategory, query);
   };
 
   // Handle category selection
   const handleCategoryChange = (categoryId: string) => {
-    setSelectedCategory(categoryId === selectedCategory ? undefined : categoryId);
+    const newCategory = categoryId === selectedCategory ? undefined : categoryId;
+    setSelectedCategory(newCategory);
+    
+    // Update URL
+    if (newCategory) {
+      navigate(`/products/${newCategory}`, { replace: true });
+    } else {
+      navigate('/products', { replace: true });
+    }
+  };
+
+  // Get current category name for display
+  const getCurrentCategoryName = () => {
+    if (selectedCategory) {
+      const category = categories.find(cat => cat.id === selectedCategory);
+      return category?.name || selectedCategory;
+    }
+    return null;
   };
 
   // Open product dialog
@@ -100,7 +138,12 @@ const Products = () => {
   return (
     <Layout>
       <div className="container mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold mb-8">المنتجات</h1>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">المنتجات</h1>
+          {getCurrentCategoryName() && (
+            <p className="text-lg text-gray-600">فئة: {getCurrentCategoryName()}</p>
+          )}
+        </div>
         
         {/* Search bar */}
         <div className="relative mb-8 max-w-md mx-auto">
@@ -179,7 +222,21 @@ const Products = () => {
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">لم يتم العثور على منتجات</p>
+            <p className="text-gray-500 text-lg">
+              {selectedCategory 
+                ? `لم يتم العثور على منتجات في فئة "${getCurrentCategoryName()}"`
+                : "لم يتم العثور على منتجات"
+              }
+            </p>
+            {selectedCategory && (
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => handleCategoryChange('')}
+              >
+                عرض جميع المنتجات
+              </Button>
+            )}
           </div>
         )}
       </div>
