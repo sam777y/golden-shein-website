@@ -41,9 +41,28 @@ const Home = () => {
     if (storedCategories) {
       try {
         const parsedCategories = JSON.parse(storedCategories);
-        setCategories([...DEFAULT_CATEGORIES, ...parsedCategories]);
+        // Merge categories, removing duplicates and preferring ones with images
+        const mergedCategories = [...DEFAULT_CATEGORIES];
+        
+        parsedCategories.forEach((storedCat: Category) => {
+          const existingIndex = mergedCategories.findIndex(c => c.id === storedCat.id);
+          if (existingIndex >= 0) {
+            // If stored category has an image, replace the default one
+            if (storedCat.image) {
+              mergedCategories[existingIndex] = storedCat;
+            }
+          } else {
+            // Add new category if it doesn't exist
+            if (storedCat.image) {
+              mergedCategories.push(storedCat);
+            }
+          }
+        });
+        
+        setCategories(mergedCategories);
       } catch (error) {
         console.error('Error loading categories:', error);
+        setCategories(DEFAULT_CATEGORIES);
       }
     }
 
