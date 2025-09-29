@@ -175,80 +175,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-16 bg-gradient-to-b from-secondary/30 to-background">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card className="text-center p-6 hover:shadow-lg transition-all duration-300 border-0 bg-background/80">
-              <CardContent className="pt-6">
-                <Truck className="w-12 h-12 text-primary mx-auto mb-4" />
-                <h3 className="font-semibold mb-2">توصيل مجاني</h3>
-                <p className="text-sm text-muted-foreground">توصيل مجاني للطلبات أكثر من 100 ريال</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="text-center p-6 hover:shadow-lg transition-all duration-300 border-0 bg-background/80">
-              <CardContent className="pt-6">
-                <Shield className="w-12 h-12 text-primary mx-auto mb-4" />
-                <h3 className="font-semibold mb-2">ضمان الجودة</h3>
-                <p className="text-sm text-muted-foreground">ضمان استرداد خلال 30 يوم</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="text-center p-6 hover:shadow-lg transition-all duration-300 border-0 bg-background/80">
-              <CardContent className="pt-6">
-                <Clock className="w-12 h-12 text-primary mx-auto mb-4" />
-                <h3 className="font-semibold mb-2">خدمة 24/7</h3>
-                <p className="text-sm text-muted-foreground">دعم العملاء على مدار الساعة</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="text-center p-6 hover:shadow-lg transition-all duration-300 border-0 bg-background/80">
-              <CardContent className="pt-6">
-                <Gift className="w-12 h-12 text-primary mx-auto mb-4" />
-                <h3 className="font-semibold mb-2">عروض حصرية</h3>
-                <p className="text-sm text-muted-foreground">خصومات وعروض دورية</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Categories Section */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">تسوق بالأقسام</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              اكتشف مجموعتنا المتنوعة من المنتجات المقسمة حسب الفئات لتسهيل تجربة التسوق
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-            {categories.map((category) => (
-              <Link key={category.id} to={`/products/${category.id}`}>
-                <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-                  <CardContent className="p-0">
-                    <div className="aspect-square overflow-hidden">
-                      <img
-                        src={category.image}
-                        alt={category.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                    </div>
-                    <div className="p-4 text-center">
-                      <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {category.name}
-                      </h3>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Featured Products */}
       <section className="py-16 bg-gradient-to-b from-secondary/20 to-background">
         <div className="container mx-auto px-4">
@@ -339,6 +265,45 @@ const Home = () => {
               />
               <Button className="px-8">اشتراك</Button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-16 bg-gradient-to-b from-secondary/30 to-background">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card className="text-center p-6 hover:shadow-lg transition-all duration-300 border-0 bg-background/80">
+              <CardContent className="pt-6">
+                <Truck className="w-12 h-12 text-primary mx-auto mb-4" />
+                <h3 className="font-semibold mb-2">توصيل مجاني</h3>
+                <p className="text-sm text-muted-foreground">توصيل مجاني للطلبات أكثر من 100 ريال</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="text-center p-6 hover:shadow-lg transition-all duration-300 border-0 bg-background/80">
+              <CardContent className="pt-6">
+                <Shield className="w-12 h-12 text-primary mx-auto mb-4" />
+                <h3 className="font-semibold mb-2">ضمان الجودة</h3>
+                <p className="text-sm text-muted-foreground">ضمان استرداد خلال 30 يوم</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="text-center p-6 hover:shadow-lg transition-all duration-300 border-0 bg-background/80">
+              <CardContent className="pt-6">
+                <Clock className="w-12 h-12 text-primary mx-auto mb-4" />
+                <h3 className="font-semibold mb-2">خدمة 24/7</h3>
+                <p className="text-sm text-muted-foreground">دعم العملاء على مدار الساعة</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="text-center p-6 hover:shadow-lg transition-all duration-300 border-0 bg-background/80">
+              <CardContent className="pt-6">
+                <Gift className="w-12 h-12 text-primary mx-auto mb-4" />
+                <h3 className="font-semibold mb-2">عروض حصرية</h3>
+                <p className="text-sm text-muted-foreground">خصومات وعروض دورية</p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
