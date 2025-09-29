@@ -1,48 +1,74 @@
 
 import React, { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Image, FolderPlus, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Edit, Trash2, Image, FolderPlus, ChevronDown, ChevronUp, Package } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Category, DEFAULT_CATEGORIES } from "@/types/product";
+import { Category, DEFAULT_CATEGORIES, Product } from "@/types/product";
 
 const CategoryManager = () => {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryImage, setNewCategoryImage] = useState<string>("");
   const [editingCategory, setEditingCategory] = useState<{id: string, name: string, imageData?: string} | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const [newSubcategoryData, setNewSubcategoryData] = useState<{parentId: string, name: string, imageData?: string} | null>(null);
+  const [viewingCategoryProducts, setViewingCategoryProducts] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Load categories from localStorage
+  // Load categories and products from localStorage
   useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = () => {
+    // Load categories
     const storedCategories = localStorage.getItem("categories");
+    let allCategories = [...DEFAULT_CATEGORIES];
+    
     if (storedCategories) {
       try {
         const parsedCategories = JSON.parse(storedCategories);
-        // Filter out any categories with empty IDs
-        const validCategories = parsedCategories.filter(
-          (cat: Category) => cat.id && cat.id.trim() !== ""
-        );
         
-        setCategories(validCategories);
+        // Merge categories, removing duplicates and keeping ones with images
+        parsedCategories.forEach((storedCat: Category) => {
+          const existingIndex = allCategories.findIndex(c => c.id === storedCat.id);
+          if (existingIndex >= 0) {
+            // Update existing category with stored data
+            allCategories[existingIndex] = storedCat;
+          } else {
+            // Add new category if it doesn't exist and has valid ID
+            if (storedCat.id && storedCat.id.trim() !== "") {
+              allCategories.push(storedCat);
+            }
+          }
+        });
         
-        // If we filtered out invalid categories, update localStorage
-        if (validCategories.length !== parsedCategories.length) {
-          localStorage.setItem("categories", JSON.stringify(validCategories));
-        }
+        setCategories(allCategories);
       } catch (error) {
         console.error("Error parsing categories", error);
         setCategories(DEFAULT_CATEGORIES);
-        localStorage.setItem("categories", JSON.stringify(DEFAULT_CATEGORIES));
       }
     } else {
       setCategories(DEFAULT_CATEGORIES);
+      // Save default categories to localStorage for future use
       localStorage.setItem("categories", JSON.stringify(DEFAULT_CATEGORIES));
     }
-  }, []);
+
+    // Load products
+    const storedProducts = localStorage.getItem("products");
+    if (storedProducts) {
+      try {
+        setProducts(JSON.parse(storedProducts));
+      } catch (error) {
+        console.error("Error parsing products", error);
+        setProducts([]);
+      }
+    }
+  };
 
   // Save categories to localStorage
   const saveCategories = (updatedCategories: Category[]) => {
@@ -116,6 +142,9 @@ const CategoryManager = () => {
       title: "تم الإضافة",
       description: `تم إضافة قسم "${newCategoryName}" بنجاح`,
     });
+    
+    // Trigger a reload event for the main site
+    window.dispatchEvent(new Event('storage'));
   };
 
   // Toggle category expansion
@@ -182,6 +211,9 @@ const CategoryManager = () => {
       title: "تم الإضافة",
       description: `تم إضافة قسم فرعي "${newSubcategoryData.name}" بنجاح`,
     });
+    
+    // Trigger a reload event for the main site
+    window.dispatchEvent(new Event('storage'));
   };
 
   // Start editing category
@@ -202,6 +234,7 @@ const CategoryManager = () => {
         ? { 
             ...cat, 
             name: editingCategory.name,
+            image: editingCategory.imageData,
             imageData: editingCategory.imageData
           } 
         : cat
@@ -214,44 +247,69 @@ const CategoryManager = () => {
       title: "تم التعديل",
       description: "تم تعديل القسم بنجاح",
     });
+    
+    // Trigger a reload event for the main site
+    window.dispatchEvent(new Event('storage'));
   };
 
   // Delete category
   const handleDeleteCategory = (categoryId: string) => {
     // Check if category is used in products
     const products = JSON.parse(localStorage.getItem("products") || "[]");
-    const isUsed = products.some((p: any) => p.category === categoryId);
+    const categoryProducts = products.filter((p: any) => p.category === categoryId);
     
-    if (isUsed) {
-      toast({
-        title: "لا يمكن الحذف",
-        description: "هذا القسم مستخدم في بعض المنتجات",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Check if category has subcategories
-    const hasSubcategories = categories.some(cat => cat.parentId === categoryId);
-    
-    if (hasSubcategories) {
-      toast({
-        title: "لا يمكن الحذف",
-        description: "يجب حذف الأقسام الفرعية أولاً",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (window.confirm("هل أنت متأكد من حذف هذا القسم؟")) {
-      const updatedCategories = categories.filter(cat => cat.id !== categoryId);
-      saveCategories(updatedCategories);
+    if (categoryProducts.length > 0) {
+      const confirmDelete = window.confirm(
+        `هذا القسم يحتوي على ${categoryProducts.length} منتج. هل تريد حذف القسم وجميع المنتجات؟`
+      );
+      
+      if (!confirmDelete) return;
+      
+      // Delete all products in this category
+      const updatedProducts = products.filter((p: any) => p.category !== categoryId);
+      localStorage.setItem("products", JSON.stringify(updatedProducts));
       
       toast({
         title: "تم الحذف",
-        description: "تم حذف القسم بنجاح",
+        description: `تم حذف القسم و ${categoryProducts.length} منتج`,
       });
     }
+    
+    // Check if category has subcategories
+    const subcategories = categories.filter(cat => cat.parentId === categoryId);
+    
+    if (subcategories.length > 0) {
+      const confirmDelete = window.confirm(
+        `هذا القسم يحتوي على ${subcategories.length} قسم فرعي. هل تريد حذف القسم وجميع الأقسام الفرعية؟`
+      );
+      
+      if (!confirmDelete) return;
+      
+      // Delete all subcategories and their products
+      subcategories.forEach(subcat => {
+        const subcatProducts = products.filter((p: any) => p.category === subcat.id);
+        const remainingProducts = products.filter((p: any) => p.category !== subcat.id);
+        localStorage.setItem("products", JSON.stringify(remainingProducts));
+      });
+    } else {
+      if (!window.confirm("هل أنت متأكد من حذف هذا القسم؟")) {
+        return;
+      }
+    }
+    
+    // Delete category and all its subcategories
+    const updatedCategories = categories.filter(
+      cat => cat.id !== categoryId && cat.parentId !== categoryId
+    );
+    saveCategories(updatedCategories);
+    
+    toast({
+      title: "تم الحذف",
+      description: "تم حذف القسم بنجاح",
+    });
+    
+    // Trigger a reload event for the main site
+    window.dispatchEvent(new Event('storage'));
   };
 
   // Get subcategories for a given parent category
@@ -264,12 +322,36 @@ const CategoryManager = () => {
     return !category.parentId;
   };
 
+  // Get products count for a category
+  const getCategoryProductsCount = (categoryId: string) => {
+    return products.filter(p => p.category === categoryId).length;
+  };
+
+  // Delete product
+  const handleDeleteProduct = (productId: string) => {
+    if (window.confirm("هل أنت متأكد من حذف هذا المنتج؟")) {
+      const updatedProducts = products.filter(p => p.id !== productId);
+      localStorage.setItem("products", JSON.stringify(updatedProducts));
+      setProducts(updatedProducts);
+      
+      toast({
+        title: "تم الحذف",
+        description: "تم حذف المنتج بنجاح",
+      });
+      
+      // Trigger a reload event for the main site
+      window.dispatchEvent(new Event('storage'));
+    }
+  };
+
   // Render a single category
   const renderCategory = (category: Category) => {
     const isExpanded = expandedCategories.includes(category.id);
     const subcategories = getSubcategories(category.id);
     const isEditing = editingCategory?.id === category.id;
     const isAddingSubcategory = newSubcategoryData?.parentId === category.id;
+    const productsCount = getCategoryProductsCount(category.id);
+    const categoryProducts = products.filter(p => p.category === category.id);
     
     return (
       <Card key={category.id} className={isMainCategory(category) ? "" : "ml-6 mt-2"}>
@@ -399,15 +481,31 @@ const CategoryManager = () => {
                 )}
                 <div>
                   <span className="text-lg">{category.name}</span>
-                  {subcategories.length > 0 && (
-                    <div className="text-xs text-gray-500">
-                      {subcategories.length} قسم فرعي
-                    </div>
-                  )}
+                  <div className="flex gap-2 text-xs text-gray-500">
+                    {subcategories.length > 0 && (
+                      <span>{subcategories.length} قسم فرعي</span>
+                    )}
+                    {productsCount > 0 && (
+                      <span>• {productsCount} منتج</span>
+                    )}
+                  </div>
                 </div>
               </div>
               
               <div className="flex gap-2">
+                {productsCount > 0 && (
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => setViewingCategoryProducts(
+                      viewingCategoryProducts === category.id ? null : category.id
+                    )}
+                    title="عرض المنتجات"
+                  >
+                    <Package className="h-4 w-4" />
+                  </Button>
+                )}
+                
                 {isMainCategory(category) && (
                   <Button 
                     variant="outline" 
@@ -456,6 +554,39 @@ const CategoryManager = () => {
             </div>
           )}
         </CardContent>
+        
+        {viewingCategoryProducts === category.id && categoryProducts.length > 0 && (
+          <div className="px-4 pb-4">
+            <div className="border rounded-md p-4 bg-gray-50">
+              <h4 className="font-medium mb-3">المنتجات في هذا القسم:</h4>
+              <div className="space-y-2">
+                {categoryProducts.map(product => (
+                  <div key={product.id} className="flex items-center justify-between bg-white p-3 rounded border">
+                    <div className="flex items-center gap-3">
+                      <img 
+                        src={product.imageData} 
+                        alt={product.name}
+                        className="w-12 h-12 object-cover rounded"
+                      />
+                      <div>
+                        <div className="font-medium">{product.name}</div>
+                        <div className="text-sm text-gray-500">{product.price} ر.س</div>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 border-red-200 hover:bg-red-50"
+                      onClick={() => handleDeleteProduct(product.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
         
         {isExpanded && subcategories.length > 0 && (
           <div className="pl-4 pb-4">

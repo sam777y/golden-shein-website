@@ -77,6 +77,9 @@ const ProductsList = () => {
         title: "تم الحذف",
         description: "تم حذف المنتج بنجاح",
       });
+      
+      // Trigger a reload event for the main site
+      window.dispatchEvent(new Event('storage'));
     }
   };
 

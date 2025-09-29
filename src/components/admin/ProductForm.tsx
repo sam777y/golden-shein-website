@@ -198,6 +198,9 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
       description: `تم ${editProduct ? "تعديل" : "إضافة"} منتج "${name}" بنجاح`,
     });
 
+    // Trigger a reload event for the main site
+    window.dispatchEvent(new Event('storage'));
+
     // Reset form if adding new product
     if (!editProduct) {
       setName("");

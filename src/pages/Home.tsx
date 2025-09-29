@@ -86,7 +86,64 @@ const Home = () => {
         console.error('Error loading products:', error);
       }
     }
+
+    // Listen for storage changes from admin panel
+    const handleStorageChange = () => {
+      loadData();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
+
+  const loadData = () => {
+    // Reload categories
+    const storedCategories = localStorage.getItem('categories');
+    if (storedCategories) {
+      try {
+        const parsedCategories = JSON.parse(storedCategories);
+        const mergedCategories = [...DEFAULT_CATEGORIES];
+        
+        parsedCategories.forEach((storedCat: Category) => {
+          const existingIndex = mergedCategories.findIndex(c => c.id === storedCat.id);
+          if (existingIndex >= 0) {
+            if (storedCat.image || storedCat.imageData) {
+              mergedCategories[existingIndex] = storedCat;
+            }
+          } else {
+            if (storedCat.image || storedCat.imageData) {
+              mergedCategories.push(storedCat);
+            }
+          }
+        });
+        
+        setCategories(mergedCategories);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      }
+    }
+
+    // Reload products
+    const storedProducts = localStorage.getItem('products');
+    if (storedProducts) {
+      try {
+        const parsedProducts = JSON.parse(storedProducts);
+        setProducts(parsedProducts);
+        
+        const latest = [...parsedProducts]
+          .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+          .slice(0, 6);
+        setSliderProducts(latest);
+        
+        const featured = parsedProducts.filter((p: Product) => p.featured);
+        setFeaturedProducts(featured);
+      } catch (error) {
+        console.error('Error loading products:', error);
+      }
+    }
+  };
 
   const handleAddToCart = (product: any, e: React.MouseEvent) => {
     e.preventDefault();
