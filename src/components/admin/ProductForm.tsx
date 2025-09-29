@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Product, Category, DEFAULT_CATEGORIES } from "@/types/product";
 import { X, Plus, Images } from "lucide-react";
@@ -22,6 +23,7 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
   const [imageData, setImageData] = useState("");
   const [additionalImages, setAdditionalImages] = useState<string[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [featured, setFeatured] = useState(false);
   
   // Dimensions state
   const [length, setLength] = useState("");
@@ -44,6 +46,7 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
       setCategory(editProduct.category);
       setImageData(editProduct.imageData);
       setAdditionalImages(editProduct.additionalImages || []);
+      setFeatured(editProduct.featured || false);
       
       // Set dimensions
       if (editProduct.dimensions) {
@@ -166,6 +169,7 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
       imageData,
       additionalImages: additionalImages.length > 0 ? additionalImages : undefined,
       category,
+      featured,
       createdAt: editProduct?.createdAt || Date.now(),
       dimensions: (length || width || height) ? {
         length: length ? parseFloat(length) : undefined,
@@ -208,6 +212,7 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
       setHeight("");
       setSizes([]);
       setNewSize("");
+      setFeatured(false);
     }
 
     if (onSave) onSave();
@@ -316,6 +321,20 @@ const ProductForm = ({ editProduct, onSave }: ProductFormProps) => {
               )}
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="flex items-center space-x-2 space-x-reverse">
+          <Checkbox
+            id="featured"
+            checked={featured}
+            onCheckedChange={(checked) => setFeatured(checked as boolean)}
+          />
+          <label
+            htmlFor="featured"
+            className="text-sm font-medium leading-none cursor-pointer"
+          >
+            منتج مميز (سيظهر في الصفحة الرئيسية)
+          </label>
         </div>
         
         <div>

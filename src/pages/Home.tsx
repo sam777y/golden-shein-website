@@ -9,6 +9,13 @@ import SEO from '@/components/SEO';
 import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { Product, Category } from '@/types/product';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 // Default categories
 const DEFAULT_CATEGORIES: Category[] = [
@@ -19,56 +26,11 @@ const DEFAULT_CATEGORIES: Category[] = [
   { id: 'accessories', name: 'إكسسوارات', image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=300&fit=crop' },
 ];
 
-// Featured products mock data
-const featuredProducts: Product[] = [
-  {
-    id: '1',
-    name: 'فستان أنيق للمناسبات',
-    price: 120,
-    originalPrice: 160,
-    image: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&h=500&fit=crop',
-    category: 'women',
-    description: 'فستان أنيق مناسب للمناسبات الخاصة',
-    inStock: true,
-    discount: 25
-  },
-  {
-    id: '2',
-    name: 'قميص رجالي كلاسيكي',
-    price: 80,
-    originalPrice: 100,
-    image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400&h=500&fit=crop',
-    category: 'men',
-    description: 'قميص رجالي كلاسيكي عالي الجودة',
-    inStock: true,
-    discount: 20
-  },
-  {
-    id: '3',
-    name: 'حذاء رياضي مريح',
-    price: 150,
-    originalPrice: 200,
-    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=500&fit=crop',
-    category: 'shoes',
-    description: 'حذاء رياضي مريح للاستخدام اليومي',
-    inStock: true,
-    discount: 25
-  },
-  {
-    id: '4',
-    name: 'شنطة يد عصرية',
-    price: 90,
-    originalPrice: 120,
-    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=500&fit=crop',
-    category: 'bags',
-    description: 'شنطة يد عصرية وأنيقة',
-    inStock: true,
-    discount: 25
-  }
-];
-
 const Home = () => {
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [sliderProducts, setSliderProducts] = useState<Product[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const { addToCart } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -82,6 +44,27 @@ const Home = () => {
         setCategories([...DEFAULT_CATEGORIES, ...parsedCategories]);
       } catch (error) {
         console.error('Error loading categories:', error);
+      }
+    }
+
+    // Load products from localStorage
+    const storedProducts = localStorage.getItem('products');
+    if (storedProducts) {
+      try {
+        const parsedProducts = JSON.parse(storedProducts);
+        setProducts(parsedProducts);
+        
+        // Get latest 6 products for slider
+        const latest = [...parsedProducts]
+          .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+          .slice(0, 6);
+        setSliderProducts(latest);
+        
+        // Get featured products
+        const featured = parsedProducts.filter((p: Product) => p.featured);
+        setFeaturedProducts(featured);
+      } catch (error) {
+        console.error('Error loading products:', error);
       }
     }
   }, []);
@@ -112,6 +95,103 @@ const Home = () => {
         description="اكتشف مجموعتنا الحصرية من الملابس والإكسسوارات العصرية. جودة عالية، أسعار منافسة، وتوصيل سريع في جميع أنحاء المملكة."
         keywords="ملابس, موضة, أناقة, شي إن الذهبي, تسوق اونلاين, ملابس نسائية, ملابس رجالية, أحذية, شنط, إكسسوارات"
       />
+      
+      {/* Product Slider Section */}
+      {sliderProducts.length > 0 && (
+        <section className="py-8 bg-gradient-to-b from-background to-secondary/20">
+          <div className="container mx-auto px-4">
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent>
+                {sliderProducts.map((product) => (
+                  <CarouselItem key={product.id} className="md:basis-1/2 lg:basis-1/3">
+                    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300">
+                      <CardContent className="p-0">
+                        <div className="relative aspect-[4/3] overflow-hidden">
+                          <img
+                            src={product.imageData}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
+                          {product.discount && (
+                            <Badge className="absolute top-2 right-2 bg-destructive">
+                              -{product.discount}%
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <h3 className="font-semibold mb-2 line-clamp-1">{product.name}</h3>
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="text-lg font-bold text-primary">
+                              {product.price} ر.س
+                            </span>
+                            {product.oldPrice && (
+                              <span className="text-sm text-muted-foreground line-through">
+                                {product.oldPrice} ر.س
+                              </span>
+                            )}
+                          </div>
+                          <Button 
+                            className="w-full"
+                            size="sm"
+                            onClick={(e) => handleAddToCart(product, e)}
+                          >
+                            أضف للسلة
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden md:flex" />
+              <CarouselNext className="hidden md:flex" />
+            </Carousel>
+          </div>
+        </section>
+      )}
+
+      {/* Categories Section */}
+      <section className="py-16 bg-gradient-to-b from-secondary/20 to-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">تسوق حسب الفئة</h2>
+            <p className="text-muted-foreground">اختر من مجموعتنا الواسعة من المنتجات</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            {categories.map((category) => (
+              <Link
+                key={category.id}
+                to={`/products?category=${category.id}`}
+                className="group"
+              >
+                <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+                  <CardContent className="p-0">
+                    <div className="relative aspect-square overflow-hidden">
+                      <img
+                        src={category.image}
+                        alt={category.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
+                        <h3 className="text-white font-bold text-lg p-4 w-full text-center">
+                          {category.name}
+                        </h3>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-primary/10 via-accent/5 to-primary/10 overflow-hidden">
         <div className="container mx-auto px-4 py-16 lg:py-24">
@@ -176,28 +256,29 @@ const Home = () => {
       </section>
 
       {/* Featured Products */}
-      <section className="py-16 bg-gradient-to-b from-secondary/20 to-background">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-12">
-            <div>
-              <h2 className="text-3xl lg:text-4xl font-bold mb-4">منتجات مميزة</h2>
-              <p className="text-muted-foreground">اختيارات خاصة من فريقنا</p>
+      {featuredProducts.length > 0 && (
+        <section className="py-16 bg-gradient-to-b from-secondary/20 to-background">
+          <div className="container mx-auto px-4">
+            <div className="flex justify-between items-center mb-12">
+              <div>
+                <h2 className="text-3xl lg:text-4xl font-bold mb-4">منتجات مميزة</h2>
+                <p className="text-muted-foreground">اختيارات خاصة من فريقنا</p>
+              </div>
+              <Link to="/products">
+                <Button variant="outline" className="group">
+                  عرض الكل
+                  <ArrowLeft className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
             </div>
-            <Link to="/products">
-              <Button variant="outline" className="group">
-                عرض الكل
-                <ArrowLeft className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product) => (
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredProducts.map((product) => (
               <Card key={product.id} className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
                 <CardContent className="p-0">
                   <div className="relative aspect-[4/5] overflow-hidden">
                     <img
-                      src={product.image || product.imageData || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=500&fit=crop'}
+                      src={product.imageData}
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />
@@ -244,10 +325,11 @@ const Home = () => {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Newsletter Section */}
       <section className="py-16 bg-gradient-to-r from-primary/10 via-accent/5 to-primary/10">

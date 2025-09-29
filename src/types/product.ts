@@ -14,6 +14,7 @@ export interface Product {
   oldPrice?: number; // السعر القديم قبل الخصم (deprecated, use originalPrice)
   discount?: number; // نسبة الخصم
   quantity?: number; // كمية المنتج المتاحة
+  featured?: boolean; // منتج مميز يظهر في الصفحة الرئيسية
   dimensions?: {
     length?: number; // الطول
     width?: number; // العرض
